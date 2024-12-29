@@ -20,14 +20,14 @@ echo "Creating domain at `date -R` for CERTBOT_DOMAIN: $CERTBOT_DOMAIN, DOMAIN: 
 RECORD_ID=$(curl -s -X POST "https://api360.yandex.net/directory/v1/org/$ORG_ID/domains/$DOMAIN/dns" \
      -H "Authorization: OAuth $OAUTH_TOKEN" \
      --data "{\"name\":\"$CREATE_DOMAIN\",\"text\":\"$CERTBOT_VALIDATION\",\"ttl\":3600,\"type\":\"TXT\"}" \
-	 | python -c "import sys,json;print(json.load(sys.stdin)['recordId'])")
+	 | python3 -c "import sys,json;print(json.load(sys.stdin)['recordId'])")
 
 # Save info for cleanup
 if [ ! -d /tmp/CERTBOT_$CERTBOT_DOMAIN ];then
         mkdir -m 0700 /tmp/CERTBOT_$CERTBOT_DOMAIN
 fi
 
-echo $RECORD_ID > /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID
+echo $RECORD_ID >> /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID
 
 echo "Created RECORD_ID: $RECORD_ID"
 

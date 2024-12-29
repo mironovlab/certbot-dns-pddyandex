@@ -9,20 +9,22 @@ DOMAIN=$(expr match "$CERTBOT_DOMAIN" '.*\.\(.*\..*\)')
 [[ -z "$DOMAIN" ]] && DOMAIN="$CERTBOT_DOMAIN"
 
 if [ -f /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID ]; then
-        RECORD_ID=$(cat /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID)
-        rm -f /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID
-fi
+	cat /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID | while read RECORD_ID
+	do
+		# Remove the challenge TXT record from the zone
+		if [ -n "${RECORD_ID}" ]; then
 
-# Remove the challenge TXT record from the zone
-if [ -n "${RECORD_ID}" ]; then
+			# https://yandex.ru/dev/api360/doc/ref/DomainDNSService/DomainDNSService_Delete.html
+			RESULT=$(curl -s -X DELETE "https://api360.yandex.net/directory/v1/org/$ORG_ID/domains/$DOMAIN/dns/$RECORD_ID" \
+				-H "Authorization: OAuth $OAUTH_TOKEN")
 
-	# https://yandex.ru/dev/api360/doc/ref/DomainDNSService/DomainDNSService_Delete.html
-	RESULT=$(curl -s -X DELETE "https://api360.yandex.net/directory/v1/org/$ORG_ID/domains/$DOMAIN/dns/$RECORD_ID" \
-      -H "Authorization: OAuth $OAUTH_TOKEN")
+			if [[ "$RESULT" == "{}" ]]; then
+				echo "ok"
+			else
+				echo $RESULT
+			fi
+		fi
+	done
 
-    if [[ "$RESULT" == "{}" ]]; then
-        echo "ok"
-    else
-        echo $RESULT
-    fi
+	rm -f /tmp/CERTBOT_$CERTBOT_DOMAIN/RECORD_ID
 fi
